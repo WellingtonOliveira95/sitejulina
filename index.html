@@ -14,15 +14,16 @@
     }
 
     #videoContainer {
-      position: relative;
-      width: 100%;
-      padding-bottom: 75%; /* Define o aspect ratio 4:3 */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
     }
 
-    #videoPreview {
-      position: absolute;
+    #videoPreview, #videoWindow {
       width: 100%;
-      height: 100%;
+      height: auto;
+      max-height: 90vh;
     }
 
     .button {
@@ -49,9 +50,14 @@
 
   <button id="startButton" class="button">Iniciar Gravação</button>
 
+  <div id="videoWindow"></div>
+
   <script>
     var videoPreview = document.getElementById('videoPreview');
     var startButton = document.getElementById('startButton');
+    var videoWindow = document.getElementById('videoWindow');
+    var mediaRecorder;
+    var chunks = [];
 
     startButton.addEventListener('click', function() {
       startButton.disabled = true;
@@ -61,8 +67,19 @@
         // Solicita permissão para acessar a câmera
         navigator.mediaDevices.getUserMedia({ video: true })
           .then(function(stream) {
-            // Exibe o stream da câmera no elemento de vídeo
+            // Exibe o stream da câmera no elemento de vídeo de pré-visualização
             videoPreview.srcObject = stream;
+
+            // Exibe o stream da câmera no elemento de vídeo da janela de visualização
+            var videoWindowStream = new MediaStream(stream.getVideoTracks());
+            var videoWindowElement = document.createElement('video');
+            videoWindowElement.id = 'videoWindowElement';
+            videoWindowElement.srcObject = videoWindowStream;
+            videoWindowElement.play();
+            videoWindow.appendChild(videoWindowElement);
+
+            // Inicia a gravação após 5 segundos
+            setTimeout(startRecording, 5000);
           })
           .catch(function(error) {
             console.error('Erro ao acessar a câmera: ', error);
@@ -73,6 +90,41 @@
         startButton.disabled = false;
       }
     });
+
+    function startRecording() {
+      // Cria um objeto MediaRecorder para gravar o vídeo
+      mediaRecorder = new MediaRecorder(videoPreview.srcObject);
+
+      // Evento disparado quando o objeto MediaRecorder recebe um novo pedaço de dados
+      mediaRecorder.ondataavailable = function(event) {
+        chunks.push(event.data);
+      };
+
+      // Inicia a gravação por 30 segundos
+      mediaRecorder.start();
+      setTimeout(stopRecording, 30000);
+    }
+
+    function stopRecording() {
+      // Para a gravação
+      mediaRecorder.stop();
+
+      // Cria um objeto Blob com os dados gravados
+      var blob = new Blob(chunks, { type: 'video/webm' });
+      
+      // Cria um link de download para o vídeo
+      var videoUrl = URL.createObjectURL(blob);
+      var downloadLink = document.createElement('a');
+      downloadLink.href = videoUrl;
+      downloadLink.download = 'video.webm';
+      downloadLink.click();
+
+      // Limpa os dados gravados
+      chunks = [];
+
+      // Reabilita o botão de iniciar gravação
+      startButton.disabled = false;
+    }
   </script>
 </body>
 </html>
