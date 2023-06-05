@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Acesso à Câmera do Celular</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      background-color: #121212;
+      color: #FFFFFF;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    #videoContainer {
+      position: relative;
+      width: 100%;
+      padding-bottom: 75%; /* Define o aspect ratio 4:3 */
+    }
+
+    #videoPreview {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+    }
+
+    .button {
+      display: block;
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #3f51b5;
+      color: #FFFFFF;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .button:hover {
+      background-color: #303f9f;
+    }
+  </style>
+</head>
+<body>
+  <div id="videoContainer">
+    <video id="videoPreview"></video>
+  </div>
+
+  <button id="startButton" class="button">Iniciar Gravação</button>
+
+  <script>
+    var videoPreview = document.getElementById('videoPreview');
+    var startButton = document.getElementById('startButton');
+
+    startButton.addEventListener('click', function() {
+      startButton.disabled = true;
+
+      // Verifica se o navegador suporta a API de mídia getUserMedia
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        // Solicita permissão para acessar a câmera
+        navigator.mediaDevices.getUserMedia({ video: true })
+          .then(function(stream) {
+            // Exibe o stream da câmera no elemento de vídeo
+            videoPreview.srcObject = stream;
+          })
+          .catch(function(error) {
+            console.error('Erro ao acessar a câmera: ', error);
+            startButton.disabled = false;
+          });
+      } else {
+        console.error('A API de mídia getUserMedia não é suportada neste navegador');
+        startButton.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
